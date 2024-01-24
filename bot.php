@@ -1,19 +1,41 @@
 <?php
 include "getdata.php";
+include "conn.php";
+function chuyenDoiSo($so)
+{
+    if ($so >= 1000000) {
+        // Nếu số lớn hơn hoặc bằng 1 triệu, chuyển đổi thành triệu
+        $soChuyenDoi = $so / 1000000;
+        $soLamTron = number_format($soChuyenDoi, 1);
+        return $soLamTron . 'M';
+    } elseif ($so >= 1000) {
+        // Nếu số lớn hơn hoặc bằng 1000, chuyển đổi thành nghìn
+        $soChuyenDoi = $so / 1000;
+        $soLamTron = number_format($soChuyenDoi, 1);
+        return $soLamTron . 'K';
+    } else {
+        // Nếu số nhỏ hơn 1000, không thay đổi
+        return $so;
+    }
+}
 $token = "6872045298:AAFD3ijj_yWjDt2pkEhPDDAYzySKSOtJ-QI";
 
 $update = json_decode(file_get_contents("php://input"), TRUE);
 $chatId = $update["message"]["chat"]["id"];
 $message = $update["message"]["text"];
+$query = "SELECT file_name FROM `file_user` WHERE user_id='" . $chatId . "'";
+$sql_result = mysqli_query($conn, $query);
+$file_name = mysqli_fetch_array($sql_result);
+
 if (strpos($message, "/start") === 0) {
     $fdata = array();
-    $myfile = fopen("data.txt", "r") or die("Unable to open file!");
+    $myfile = fopen($file_name, "r") or die("Unable to open file!");
     while (!feof($myfile)) {
         $userid = trim(fgets($myfile));
         $datas = $getTiktokUser->details('@' . $userid);
         $datatmp = json_decode($datas, true);
         $tichxanh = $datatmp["user"]["verified"] ? "Có" : "Không";
-        $strtmp = "username : " . $datatmp["user"]["username"] . " ;\nuser Id : " . $datatmp["user"]["profileName"] . " ;\nvị trí : " . $datatmp["user"]["region"] . " ;\n tích xanh : " . $tichxanh . " ;\nfollowing : " . $datatmp["stats"]["following"] . " ;\nfollower : " . $datatmp["stats"]["follower"] . " ;\nvideo : " . $datatmp["stats"]["video"] . " ;\nlike : " . $datatmp["stats"]["like"];
+        $strtmp = "link : https://www.tiktok.com/@" . $datatmp["user"]["profileName"] . " ;\nusername : " . $datatmp["user"]["username"] . " ;\nuser Id : " . $datatmp["user"]["profileName"] . " ;\nvị trí : " . $datatmp["user"]["region"] . " ;\ntích xanh : " . $tichxanh . " ;\nfollowing : " . chuyenDoiSo($datatmp["stats"]["following"]) . " ;\nfollower : " . chuyenDoiSo($datatmp["stats"]["follower"]) . " ;\nvideo : " . $datatmp["stats"]["video"] . " ;\nlike : " . chuyenDoiSo($datatmp["stats"]["like"]);
         array_push($fdata, $strtmp);
     }
     fclose($myfile);

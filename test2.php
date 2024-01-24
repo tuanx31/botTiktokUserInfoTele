@@ -26,5 +26,6 @@ if (strpos($message, "/xinchao") === 0) {
     }
 
     curl_close($ch);
+
 }
 ?>
