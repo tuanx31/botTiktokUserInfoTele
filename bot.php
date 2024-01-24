@@ -26,10 +26,9 @@ $message = $update["message"]["text"];
 $query = "SELECT file_name FROM `file_user` WHERE user_id='" . $chatId . "'";
 $sql_result = mysqli_query($conn, $query);
 $file_name = mysqli_fetch_array($sql_result);
-
-if (strpos($message, "/start") === 0) {
+if (strpos($message, "/laydata") === 0) {
     $fdata = array();
-    $myfile = fopen($file_name, "r") or die("Unable to open file!");
+    $myfile = fopen($file_name['file_name'], "r") or die("Unable to open file!");
     while (!feof($myfile)) {
         $userid = trim(fgets($myfile));
         $datas = $getTiktokUser->details('@' . $userid);
@@ -63,6 +62,28 @@ if (strpos($message, "/start") === 0) {
         curl_close($ch);
     }
 }
+if (strpos($message, "/getfile") === 0) {
+    $datapost = array(
+        "chat_id" => $chatId,
+        "text" => "tên file : " . $file_name['file_name']
+    );
+    $url = "https://api.telegram.org/bot" . $token . "/sendMessage";
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($datapost));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($ch);
+
+    if ($response === FALSE) {
+        // Handle error
+        echo "Error occurred while making the request: " . curl_error($ch);
+    } else {
+        // Process the response
+        echo $response;
+    }
+    curl_close($ch);
+}
 if (strpos($message, "/xinchao") === 0) {
     $response = "Chào cc \n";
     $datapost = array(
@@ -84,7 +105,28 @@ if (strpos($message, "/xinchao") === 0) {
         // Process the response
         echo $response;
     }
+    curl_close($ch);
+}
+if (strpos($message, "/start") === 0) {
+    $datapost = array(
+        "chat_id" => $chatId,
+        "text" => "id Tele :" . $chatId
+    );
+    $url = "https://api.telegram.org/bot" . $token . "/sendMessage";
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($datapost));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
+    $response = curl_exec($ch);
+
+    if ($response === FALSE) {
+        // Handle error
+        echo "Error occurred while making the request: " . curl_error($ch);
+    } else {
+        // Process the response
+        echo $response;
+    }
     curl_close($ch);
 }
 ?>
