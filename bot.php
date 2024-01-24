@@ -27,21 +27,11 @@ $query = "SELECT file_name FROM `file_user` WHERE user_id='" . $chatId . "'";
 $sql_result = mysqli_query($conn, $query);
 $file_name = mysqli_fetch_array($sql_result);
 if (strpos($message, "/laydata") === 0) {
-    $fdata = array();
-    $myfile = fopen($file_name['file_name'], "r") or die("Unable to open file!");
-    while (!feof($myfile)) {
-        $userid = trim(fgets($myfile));
-        $datas = $getTiktokUser->details('@' . $userid);
-        $datatmp = json_decode($datas, true);
-        $tichxanh = $datatmp["user"]["verified"] ? "Có" : "Không";
-        $strtmp = "link : https://www.tiktok.com/@" . $datatmp["user"]["profileName"] . " ;\nusername : " . $datatmp["user"]["username"] . " ;\nuser Id : " . $datatmp["user"]["profileName"] . " ;\nvị trí : " . $datatmp["user"]["region"] . " ;\ntích xanh : " . $tichxanh . " ;\nfollowing : " . chuyenDoiSo($datatmp["stats"]["following"]) . " ;\nfollower : " . chuyenDoiSo($datatmp["stats"]["follower"]) . " ;\nvideo : " . $datatmp["stats"]["video"] . " ;\nlike : " . chuyenDoiSo($datatmp["stats"]["like"]);
-        array_push($fdata, $strtmp);
-    }
-    fclose($myfile);
-    foreach ($fdata as $value) {
+    $qrban = "select ban from `file_user` where user_id='" . $chatId . "'";
+    if (mysqli_fetch_array($conn->query($qrban))['ban'] == 1) {
         $datapost = array(
             "chat_id" => $chatId,
-            "text" => $value
+            "text" => "bạn bị ban ,liên hệ admin để biết thêm thông tin chi tiết"
         );
         $url = "https://api.telegram.org/bot" . $token . "/sendMessage";
         $ch = curl_init($url);
@@ -58,8 +48,42 @@ if (strpos($message, "/laydata") === 0) {
             // Process the response
             echo $response;
         }
-
         curl_close($ch);
+    } else {
+        $fdata = array();
+        $myfile = fopen($file_name['file_name'], "r") or die("Unable to open file!");
+        while (!feof($myfile)) {
+            $userid = trim(fgets($myfile));
+            $datas = $getTiktokUser->details('@' . $userid);
+            $datatmp = json_decode($datas, true);
+            $tichxanh = $datatmp["user"]["verified"] ? "Có" : "Không";
+            $strtmp = "link : https://www.tiktok.com/@" . $datatmp["user"]["profileName"] . " ;\nusername : " . $datatmp["user"]["username"] . " ;\nuser Id : " . $datatmp["user"]["profileName"] . " ;\nvị trí : " . $datatmp["user"]["region"] . " ;\ntích xanh : " . $tichxanh . " ;\nfollowing : " . chuyenDoiSo($datatmp["stats"]["following"]) . " ;\nfollower : " . chuyenDoiSo($datatmp["stats"]["follower"]) . " ;\nvideo : " . $datatmp["stats"]["video"] . " ;\nlike : " . chuyenDoiSo($datatmp["stats"]["like"]);
+            array_push($fdata, $strtmp);
+        }
+        fclose($myfile);
+        foreach ($fdata as $value) {
+            $datapost = array(
+                "chat_id" => $chatId,
+                "text" => $value
+            );
+            $url = "https://api.telegram.org/bot" . $token . "/sendMessage";
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($datapost));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            $response = curl_exec($ch);
+
+            if ($response === FALSE) {
+                // Handle error
+                echo "Error occurred while making the request: " . curl_error($ch);
+            } else {
+                // Process the response
+                echo $response;
+            }
+
+            curl_close($ch);
+        }
     }
 }
 if (strpos($message, "/getfile") === 0) {
