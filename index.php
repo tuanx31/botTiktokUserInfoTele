@@ -3,27 +3,36 @@ include "conn.php";
 if (isset($_POST['up']) && isset($_POST['idtele']) && isset($_FILES['data'])) {
     $id = $_POST['idtele'];
     $sql = "select * from file_user where user_id ='" . $id . "'";
-    $sql2 = "select * from file_user where file_name ='" . $_FILES['data']['name'] . "'";
+    $sql2 = "select * from file where name_file ='" . $_FILES['data']['name'] . "'";
     $results = $conn->query($sql);
 
-    if (mysqli_num_rows($results) > 0) {
-        $qr = "select * from file_user where user_id ='" . $id . "'and file_name = '" . $_FILES['data']['name'] . "'";
-        if (mysqli_num_rows($conn->query($qr))) {
+    if (mysqli_num_rows($results) > 0) { // người dùng đã tồn tại
+        $qr = "select * from file where user ='" . $id . "'and name_file = '" . $_FILES['data']['name'] . "'";
+        if (mysqli_num_rows($conn->query($qr)) > 0) { // file đã tồn tại trong user
             move_uploaded_file($_FILES['data']['tmp_name'], $_FILES['data']['name']);
-            $querys = "UPDATE `file_user` SET `file_name` = '" . $_FILES['data']['name'] . "' WHERE `file_user`.`user_id` = '" . $id . "'";
-            $conn->query($querys);
-            $conn->error;
             echo "<p class = 'text-center mt-2'>update file thành công</p>";
         } else {
-            echo "<p class = 'text-center mt-2'>vui lòng đổi tên file thành <span class ='text-danger'>" . mysqli_fetch_array($results)["file_name"] . "</span> rồi up lại</p>";
+            if (mysqli_num_rows($conn->query($sql2)) > 0) {
+                echo "<p class = 'text-center mt-2'>tên file đã có người sử dụng , vui lòng đổi tên file rồi up lại</p>";
+            } else {
+                $qr = "INSERT INTO `file` ( `name_file`, `user`) VALUES ('" . $_FILES['data']['name'] . "', '" . $id . "');";
+                echo $qr;
+                $conn->query($qr);
+                $conn->error;
+                move_uploaded_file($_FILES['data']['tmp_name'], $_FILES['data']['name']);
+                echo "<p class = 'text-center mt-2'>upload file thành công</p>";
+            }
+
         }
     } else {
         if (mysqli_num_rows($conn->query($sql2)) > 0) {
             echo "<p class = 'text-center mt-2'>tên file đã có người sử dụng , vui lòng đổi tên file rồi up lại</p>";
         } else {
-            $querys = "INSERT INTO `file_user`( `user_id`, `file_name`) VALUES ('" . $id . "','" . $_FILES['data']['name'] . "')";
+            $querys = "INSERT INTO `file_user`( `user_id`) VALUE ('" . $id . "')";
             $conn->query($querys);
             $conn->error;
+            $qrinsert = "INSERT INTO `file` (`name_file`, `user`) VALUES ( '" . $_FILES['data']['name'] . "', '" . $id . "');";
+            $conn->query($qrinsert);
             echo "<p class = 'text-center mt-2'>tạo thành công . id tele : " . $id . "; file name : " . $_FILES['data']['name'] . "</p>";
             move_uploaded_file($_FILES['data']['tmp_name'], $_FILES['data']['name']);
         }
@@ -46,7 +55,7 @@ if (isset($_POST['up']) && isset($_POST['idtele']) && isset($_FILES['data'])) {
     <div class="d-flex justify-content-center align-item-center w-100" style="height: 100vh;">
         <div class="mt-3" style="height: 300px;">
             <form action="index.php" method="POST" enctype="multipart/form-data">
-                <input class="form-control" type="text" placeholder="id Telegram" name="idtele" required>
+                <input class="form-control" type="text" placeholder="id Telegram" name="idtele" required accept=".txt">
                 <br />
                 <div class="input-group mb-3">
                     <input type="file" class="form-control" name="data" id="inputGroupFile02">
