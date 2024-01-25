@@ -9,7 +9,8 @@ $update = json_decode(file_get_contents("php://input"), TRUE);
 $chatId = $update["message"]["chat"]["id"];
 $message = $update["message"]["text"];
 $query = "SELECT name_file FROM `file` WHERE user = '" . $chatId . "'";
-
+$queryall = "SELECT * FROM `file`";
+$all_file = mysqli_fetch_all($conn->query($queryall), MYSQLI_ASSOC);
 $file_name = mysqli_fetch_all($conn->query($query), MYSQLI_ASSOC);
 function insertStorage($filePath, $chatId, $userData)
 {
@@ -196,6 +197,35 @@ if (strpos($message, "/start") === 0) {
     }
     curl_close($ch);
     changeStatus("1");
+} elseif (strpos($message, "/getallfile") === 0) {
+    if ($chatId == $idteleAdmin) {
+
+        $arr = '';
+        foreach ($all_file as $key) {
+            $arr = $arr . $key['name_file'] . " của " . $key['user'] . "\n ";
+        }
+        $datapost = array(
+            "chat_id" => $chatId,
+            "text" => "tất cả file : \n" . $arr
+        );
+        $url = "https://api.telegram.org/bot" . $token . "/sendMessage";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($datapost));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+
+        if ($response === FALSE) {
+            // Handle error
+            echo "Error occurred while making the request: " . curl_error($ch);
+        } else {
+            // Process the response
+            echo $response;
+        }
+        curl_close($ch);
+        changeStatus("1");
+    }
 } elseif (strpos($message, "/laydata") === 0) {
     $qrban = "select ban from `file_user` where user_id='" . $chatId . "'";
     if (mysqli_fetch_array($conn->query($qrban))['ban'] == 1) {

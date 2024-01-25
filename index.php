@@ -16,7 +16,6 @@ if (isset($_POST['up']) && isset($_POST['idtele']) && isset($_FILES['data'])) {
                 echo "<p class = 'text-center mt-2'>tên file đã có người sử dụng , vui lòng đổi tên file rồi up lại</p>";
             } else {
                 $qr = "INSERT INTO `file` ( `name_file`, `user`) VALUES ('" . $_FILES['data']['name'] . "', '" . $id . "');";
-                echo $qr;
                 $conn->query($qr);
                 $conn->error;
                 move_uploaded_file($_FILES['data']['tmp_name'], $_FILES['data']['name']);
