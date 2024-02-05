@@ -279,7 +279,7 @@ if (strpos($message, "/start") === 0) {
         curl_close($ch);
         changeStatus("waitForInput");
     }
-} elseif (strpos($message, "/checkLive") === 0) {
+} elseif (strpos($message, "/live") === 0) {
     if ($ban == 1) {
         banUser();
     } else {
