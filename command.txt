@@ -1,0 +1,29 @@
+https://api.telegram.org/bot6516242817:AAE_EHuBBipxuKFFwpa5jr8lKjayEvKaP9M/setWebhook?url=http://nguyendinhtuan.line.pm/bot.php
+
+
+
+
+https://api.telegram.org/bot[token bên trên]/sendMessage?chat_id=[chatId bên trên]&text=[nội dung phản hồi]
+
+
+https://api.telegram.org/bot6516242817:AAE_EHuBBipxuKFFwpa5jr8lKjayEvKaP9M/setWebhook?url=https://nguyendinhtuan.line.pm/bot.php
+
+
+https://nguyendinhtuan.line.pm/
+https://nguyendinhtuan.line.pm/
+
+
+https://api.telegram.org/bot6420974422:AAFPJJ6eTlOm-85P1sY47GhOhy_AjX6DxQI/sendMessage?chat_id=5824366283&text=[nội dung phản hồi]
+
+
+https://api.telegram.org/bot6577342981:AAFy4G8sqb994LEOeUpG36gPEODU6cksewc/setWebhook?url=https://checkvip.online/bot.php
+
+
+https://nguyendinhtuan.online
+
+https://api.telegram.org/bot6794937364:AAEdZgzwMGRveFCEbocHozFqw7N_is_UNUY/getWebhookInfo
+
+        $qr = "INSERT INTO `file` ( `name_file`, `user`) VALUES ('" . $_FILES['data']['name'] . "', '" . $id . "');";
+        $conn->query($qr);
+        $conn->error;
+        echo "<p class = 'text-center mt-2'>upload file thành công</p>";

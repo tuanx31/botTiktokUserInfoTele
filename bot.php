@@ -8,10 +8,36 @@ $idteleAdmin = 5824366283;
 $update = json_decode(file_get_contents("php://input"), TRUE);
 $chatId = $update["message"]["chat"]["id"];
 $message = $update["message"]["text"];
+
 $query = "SELECT name_file FROM `file` WHERE user = '" . $chatId . "'";
 $queryall = "SELECT * FROM `file`";
+$qrban = "select ban from `file_user` where user_id='" . $chatId . "'";
+$ban = mysqli_fetch_array($conn->query($qrban))['ban'];
 $all_file = mysqli_fetch_all($conn->query($queryall), MYSQLI_ASSOC);
 $file_name = mysqli_fetch_all($conn->query($query), MYSQLI_ASSOC);
+function banUser()
+{
+    $datapost = array(
+        "chat_id" => $GLOBALS['chatId'],
+        "text" => "bạn bị ban ,liên hệ admin để biết thêm thông tin chi tiết"
+    );
+    $url = "https://api.telegram.org/bot" . $GLOBALS['token'] . "/sendMessage";
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($datapost));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($ch);
+
+    if ($response === FALSE) {
+        // Handle error
+        echo "Error occurred while making the request: " . curl_error($ch);
+    } else {
+        // Process the response
+        echo $response;
+    }
+    curl_close($ch);
+}
 function insertStorage($filePath, $chatId, $userData)
 {
     if (file_exists($filePath)) {
@@ -198,8 +224,8 @@ if (strpos($message, "/start") === 0) {
     curl_close($ch);
     changeStatus("1");
 } elseif (strpos($message, "/getallfile") === 0) {
-    if ($chatId == $idteleAdmin) {
 
+    if ($chatId == $idteleAdmin) {
         $arr = '';
         foreach ($all_file as $key) {
             $arr = $arr . $key['name_file'] . " của " . $key['user'] . "\n ";
@@ -227,28 +253,8 @@ if (strpos($message, "/start") === 0) {
         changeStatus("1");
     }
 } elseif (strpos($message, "/laydata") === 0) {
-    $qrban = "select ban from `file_user` where user_id='" . $chatId . "'";
-    if (mysqli_fetch_array($conn->query($qrban))['ban'] == 1) {
-        $datapost = array(
-            "chat_id" => $chatId,
-            "text" => "bạn bị ban ,liên hệ admin để biết thêm thông tin chi tiết"
-        );
-        $url = "https://api.telegram.org/bot" . $token . "/sendMessage";
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($datapost));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        $response = curl_exec($ch);
-
-        if ($response === FALSE) {
-            // Handle error
-            echo "Error occurred while making the request: " . curl_error($ch);
-        } else {
-            // Process the response
-            echo $response;
-        }
-        curl_close($ch);
+    if ($ban == 1) {
+        banUser();
     } else {
         $response = "Nhập file txt cần lấy thông tin";
         $datapost = array(
@@ -272,6 +278,33 @@ if (strpos($message, "/start") === 0) {
         }
         curl_close($ch);
         changeStatus("waitForInput");
+    }
+} elseif (strpos($message, "/checkLive") === 0) {
+    if ($ban == 1) {
+        banUser();
+    } else {
+        $response = "Nhập file txt cần lấy thông tin";
+        $datapost = array(
+            "chat_id" => $chatId,
+            "text" => $response
+        );
+        $url = "https://api.telegram.org/bot" . $token . "/sendMessage";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($datapost));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($ch);
+
+        if ($response === FALSE) {
+            // Handle error
+            echo "Error occurred while making the request: " . curl_error($ch);
+        } else {
+            // Process the response
+            echo $response;
+        }
+        curl_close($ch);
+        changeStatus("CheckLive");
     }
 } elseif (strpos($message, "/layidtele") === 0) {
     $datapost = array(
@@ -380,4 +413,50 @@ if (searchByChatId($filePath, $chatId)['status'] == "waitForInput") {
     }
 
 }
+if (searchByChatId($filePath, $chatId)['status'] == "CheckLive") {
+    $myfile = fopen($message, "r") or die("Unable to open file!");
+    $live = '';
+    $die = '';
+    while (!feof($myfile)) {
+        $fullUserId = fgets($myfile);
+        $userid = trim($fullUserId);
+        $datas = $getTiktokUser->details('@' . getuserid($userid));
+        $datatmp = json_decode($datas, true);
+        if ($datatmp["code"] == 404) { //not found
+            $die = $die . $fullUserId;
+        } else if ($datatmp["code"] == 200) {
+            $live = $live . $fullUserId;
+        }
+    }
+    fclose($myfile);
+    if ($die == '') {
+        $die = 'Không có kênh nào DIE';
+    }
+    if ($live == '') {
+        $live = 'Không có kênh nào LIVE';
+    }
+    $f = "INFO : \n\nLIVE :\n" . $live . " \n\nDIE : \n" . $die;
+    $datapost = array(
+        "chat_id" => $chatId,
+        "text" => $f
+    );
+    $url = "https://api.telegram.org/bot" . $token . "/sendMessage";
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($datapost));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($ch);
+
+    if ($response === FALSE) {
+        // Handle error
+        echo "Error occurred while making the request: " . curl_error($ch);
+    } else {
+        // Process the response
+        echo $response;
+    }
+    curl_close($ch);
+    changeStatus("1");
+}
+
 ?>
